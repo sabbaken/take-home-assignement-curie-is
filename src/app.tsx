@@ -17,8 +17,8 @@ export function App() {
         <aside className="browser-warning" role="alert">
           <TriangleAlert aria-hidden="true" />
           <p>
-            <strong>Please use Google Chrome.</strong> Safari support was outside the scope of this
-            time-limited assignment.
+            <strong>Please use Google Chrome.</strong> Safari is not currently supported by this
+            proof of concept.
           </p>
         </aside>
       )}

@@ -4,8 +4,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-Curie Reader is a take-home proof of concept. It renders a PDF with `pdfjs-dist` and highlights the
-sentence and word being read aloud, in the style of Speechify. The core of the task is getting
+PDF Narration Reader is a proof of concept. It renders a PDF with `pdfjs-dist` and highlights the
+sentence and word being read aloud, in the style of Speechify. The core technical focus is getting
 **accurate highlight rectangles**. A "naive" strategy uses DOM ranges over the PDF.js TextLayer
 spans. A "precise" strategy uses real font metrics per glyph. The UI shows both side by side in a
 debug mode.

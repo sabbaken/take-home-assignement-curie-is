@@ -1,18 +1,17 @@
-# Curie Reader
+# PDF Narration Reader
 
 A single-page proof of concept for PDF narration. It renders a PDF with PDF.js and highlights
 the sentence and word being read aloud. The focus is making the highlight land exactly on the
 glyphs drawn on the canvas, not only roughly near them.
 
-**[Live demo](https://sabbaken.github.io/take-home-assignment-curie/)** · **[How it works](#how-it-works)** · **[Status](#status)**
+**[Live demo](https://sabbaken.github.io/pdf-narration-reader/)** · **[How it works](#how-it-works)** · **[Status](#status)**
 
-[![Deploy status](https://github.com/sabbaken/take-home-assignment-curie/actions/workflows/deploy.yml/badge.svg)](https://github.com/sabbaken/take-home-assignment-curie/actions/workflows/deploy.yml)
+[![Deploy status](https://github.com/sabbaken/pdf-narration-reader/actions/workflows/deploy.yml/badge.svg)](https://github.com/sabbaken/pdf-narration-reader/actions/workflows/deploy.yml)
 
 > [!IMPORTANT]
-> Please open the live demo in **Google Chrome**. This take-home assignment was implemented under
-> a tight time constraint, and Chrome is currently the only supported browser. Safari requires
-> additional browser-specific API work that was outside the available timeframe, so the current
-> proof of concept does not work there.
+> Please open the live demo in **Google Chrome**, which is currently the only supported browser.
+> Safari requires additional browser-specific API work, so the current proof of concept does not
+> work there.
 
 ## Stack
 
