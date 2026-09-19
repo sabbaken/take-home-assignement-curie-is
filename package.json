@@ -1,6 +1,7 @@
 {
   "name": "curie-pdf-reader",
   "version": "0.1.0",
+  "license": "UNLICENSED",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@12.4.1",

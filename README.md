@@ -125,3 +125,11 @@ custom domain.
 pnpm build        # outputs dist/
 pnpm preview      # serve the production build locally
 ```
+
+## License
+
+Copyright © 2026 Kirill Verenih. All rights reserved.
+
+This repository is publicly available for evaluation and portfolio review only. No permission is
+granted to use, copy, modify, distribute, or deploy its original source code without prior written
+permission. See [LICENSE](LICENSE) for details.
