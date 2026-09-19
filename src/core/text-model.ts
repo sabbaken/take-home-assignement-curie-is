@@ -14,9 +14,10 @@ export type TextRange = {
   text: string
 }
 
-export type PageTextModel = {
+// Generic over the item type, so the precise strategy can read the geometry of PDF.js items.
+export type PageTextModel<Item extends PdfTextItem = PdfTextItem> = {
   text: string
-  items: PdfTextItem[]
+  items: Item[]
   characterSources: Array<CharacterSource | null>
   words: TextRange[]
   sentences: TextRange[]
@@ -61,7 +62,10 @@ function getSeparator(text: string, current: string, pendingBreak: 'line' | 'blo
   return /\s$/u.test(text) || /^\s/u.test(current) ? '' : ' '
 }
 
-export function buildPageTextModel(sourceItems: PdfTextItem[], locale?: string): PageTextModel {
+export function buildPageTextModel<Item extends PdfTextItem>(
+  sourceItems: Item[],
+  locale?: string,
+): PageTextModel<Item> {
   const items = sourceItems.filter(item => typeof item.str === 'string')
   const characterSources: Array<CharacterSource | null> = []
   let text = ''

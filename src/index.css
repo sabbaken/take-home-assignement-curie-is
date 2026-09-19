@@ -174,6 +174,11 @@
   stroke: #ef476f;
 }
 
+.debug-outline.precise {
+  fill: rgb(66 98 255 / 10%);
+  stroke: #4262ff;
+}
+
 .page-loading {
   position: absolute;
   z-index: 2;

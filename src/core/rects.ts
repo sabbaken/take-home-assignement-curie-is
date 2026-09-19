@@ -78,10 +78,18 @@ export function sliceByItem(model: PageTextModel, start: number, end: number) {
   return slices
 }
 
+// Measures a run of characters inside one item. The precise strategy falls back to the naive one
+// through this for the items it cannot measure.
+export interface SliceRectSource {
+  getSliceRects(slice: ItemSlice): Rect[]
+}
+
 // Measures one `Range` per item on the TextLayer spans. PDF.js creates one span for every text
 // item, empty ones included, so `textDivs` lines up with `model.items`. The spans use a fallback
 // font stretched to the item width, so boxes drift from the glyphs drawn on the canvas.
-export class NaiveRectStrategy implements RectStrategy {
+export class NaiveRectStrategy implements RectStrategy, SliceRectSource {
+  private readonly range = document.createRange()
+
   constructor(
     private readonly model: PageTextModel,
     private readonly textDivs: HTMLElement[],
@@ -89,32 +97,29 @@ export class NaiveRectStrategy implements RectStrategy {
   ) {}
 
   getRects(start: number, end: number) {
-    const containerRect = this.container.getBoundingClientRect()
-    const range = document.createRange()
-    const rects: Rect[] = []
+    return mergeRectsByLine(
+      sliceByItem(this.model, start, end).flatMap(slice => this.getSliceRects(slice)),
+    )
+  }
 
-    for (const slice of sliceByItem(this.model, start, end)) {
-      const node = this.textDivs[slice.itemIndex]?.firstChild
-      if (!(node instanceof Text)) {
-        continue
-      }
-
-      range.setStart(node, Math.min(slice.start, node.length))
-      range.setEnd(node, Math.min(slice.end, node.length))
-
-      for (const rect of Array.from(range.getClientRects())) {
-        if (rect.width > 0 && rect.height > 0) {
-          rects.push({
-            x: rect.left - containerRect.left,
-            y: rect.top - containerRect.top,
-            width: rect.width,
-            height: rect.height,
-          })
-        }
-      }
+  getSliceRects(slice: ItemSlice) {
+    const node = this.textDivs[slice.itemIndex]?.firstChild
+    if (!(node instanceof Text)) {
+      return []
     }
 
-    return mergeRectsByLine(rects)
+    const containerRect = this.container.getBoundingClientRect()
+    this.range.setStart(node, Math.min(slice.start, node.length))
+    this.range.setEnd(node, Math.min(slice.end, node.length))
+
+    return Array.from(this.range.getClientRects())
+      .filter(rect => rect.width > 0 && rect.height > 0)
+      .map(rect => ({
+        x: rect.left - containerRect.left,
+        y: rect.top - containerRect.top,
+        width: rect.width,
+        height: rect.height,
+      }))
   }
 }
 

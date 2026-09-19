@@ -9,7 +9,7 @@ type PageText = {
   pageNumber: number
   // The TextLayer is rendered from this same object, so its spans line up with `model.items`.
   textContent: TextContent
-  model: PageTextModel
+  model: PageTextModel<TextItem>
 }
 
 const EMPTY_TEXT_CONTENT: TextContent = { items: [], styles: {}, lang: null }

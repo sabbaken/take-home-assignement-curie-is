@@ -50,6 +50,8 @@ paths.
   Words (`isWordLike`) and sentences come from `Intl.Segmenter` as `[start, end)` ranges over that
   string. Sentences without words are dropped, so every sentence has something to read.
   `findWordIndex` and `findSentenceIndex` turn a speech `charIndex` into the active range.
+  `PageTextModel` is generic over the item type. The viewer builds it from PDF.js `TextItem`s, so
+  the precise strategy can read `transform`, `width` and `fontName` from `model.items`.
 - `rects.ts`: the `RectStrategy` interface (`getRects(start, end) → Rect[]`) that both strategies
   implement, `mergeRectsByLine` (one box per visual line), `roundedRectsPath` (SVG path data) and
   `NaiveRectStrategy`. The naive strategy indexes `textDivs` by the model's `itemIndex` and measures
@@ -57,12 +59,20 @@ paths.
   every item that has `str`, empty ones included (verified in `pdfjs-dist` 6.3). Rects are in
   pixels, relative to the TextLayer, which covers the page. `measurePageLayout` measures every word
   and sentence once per render, so rendering and hit testing (`findWordAtPoint`) are pure.
+- `precise-rects.ts`: `PreciseRectStrategy` (plan step 3). It takes the baseline and font size from
+  `Util.transform(viewport.transform, item.transform)`, and the height from `ascent`/`descent` in
+  `textContent.styles`. Horizontal offsets are prefix widths, `measureText(str.slice(0, i))`,
+  scaled so the item spans `item.width` in pixels. It measures at a fixed 100px, since only the
+  proportions matter. The per-item fallback to the naive strategy goes through
+  `SliceRectSource.getSliceRects`. An item falls back when its font has no loaded `FontFace` in
+  `document.fonts` (Type3 and missing fonts have none), or when it is rotated, vertical or RTL.
+  The measuring is behind the `FontMeasurer` interface, so the tests use a fake one.
 - `speech.ts`: `readAloud` speaks one sentence per `SpeechSynthesisUtterance`, maps `boundary`
   events back to word indexes, falls back to a timer when the voice sends none, and returns a
   cancel function for effect cleanup.
 - Keep this layer free of React so it stays unit-testable. jsdom has no layout or canvas, so the
   tests cover only the pure logic (segmentation, merging, path strings, speech with a fake
-  `speechSynthesis`), not the real rectangles.
+  `speechSynthesis`, the precise geometry with a fake `FontMeasurer`), not the real rectangles.
 
 ### `src/components/pdf-viewer/`: the single screen
 
@@ -101,12 +111,17 @@ the page number to the `pdf` instance, so a new document starts on page 1 withou
   page, but the TextLayer and the measured rects are rebuilt at every scale.
 - The page container stacks three layers: canvas, then TextLayer (`page-text-layer.tsx`), then the
   `<svg>` overlay (`highlight-overlay.tsx`). Clicking a word seeks there and starts reading.
-- The Naive/Precise toggle has no effect yet: only the naive strategy exists, and debug mode
-  outlines words with it alone.
-- The precise strategy (plan step 3) measures **prefixes** (`measureText(str.slice(0, i))`) so
-  kerning is included, then scales the result to `item.width × scale`. It falls back to the naive
-  strategy per item when the font is not loaded or is Type3. Rotated and vertical text is out of
-  scope and should be documented in the README.
+- `PageTextLayer` measures both layouts on every render, so debug mode can outline words with
+  both strategies at once. The Naive/Precise toggle picks the layout used for the highlight and
+  for click hit testing.
+- PDF.js registers the embedded fonts (`FontFace` named after `item.fontName`) while it draws the
+  canvas. `PageTextLayer` therefore waits for `isCanvasRendered` from `PdfPage` before it
+  measures. Without that wait, every item would silently fall back to the naive strategy.
+- `document.fonts.check()` returns true for a family that is not in the set at all, so it cannot
+  tell whether a PDF font is loaded. Look the `FontFace` up by family instead.
+- PDF.js drops `kern`/`GPOS` when it repacks a font, so prefix widths equal summed glyph advances.
+  Kerning written into the PDF (TJ offsets) ends up in `item.width` and is spread across the item
+  by the scaling.
 
 ## Conventions
 

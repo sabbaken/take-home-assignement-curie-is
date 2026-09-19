@@ -1,5 +1,7 @@
 import { type PDFDocumentProxy, TextLayer } from 'pdfjs-dist'
+import type { TextItem } from 'pdfjs-dist/types/src/display/api'
 import { type MouseEvent, useEffect, useRef, useState } from 'react'
+import { PreciseRectStrategy } from '@/core/precise-rects'
 import {
   findWordAtPoint,
   measurePageLayout,
@@ -9,6 +11,7 @@ import {
 import type { PageTextModel } from '@/core/text-model'
 import { HighlightOverlay } from './highlight-overlay'
 import { useDocument } from './state/document'
+import { type RectMode, useModes } from './state/modes'
 import { usePageText } from './state/page-text'
 import { usePlayer } from './state/player'
 import { useViewport } from './state/viewport'
@@ -17,23 +20,33 @@ type MeasuredLayer = {
   pdf: PDFDocumentProxy
   pageNumber: number
   scale: number
-  model: PageTextModel
-  layout: PageLayout
+  model: PageTextModel<TextItem>
+  layouts: Record<RectMode, PageLayout>
 }
 
-// Renders the PDF.js TextLayer over the canvas and measures word and sentence rects on it. The
-// layer is rebuilt at every scale; the rects are relative to the layer, which covers the page.
-export function PageTextLayer() {
+// Renders the PDF.js TextLayer over the canvas and measures word and sentence rects with both
+// strategies, so debug mode can show them together. The layer is rebuilt at every scale; the
+// rects are relative to the layer, which covers the page.
+export function PageTextLayer({ isCanvasRendered }: { isCanvasRendered: boolean }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const { pdf } = useDocument()
   const { pageNumber, scale } = useViewport()
   const { textContent, model } = usePageText()
   const { seek } = usePlayer()
+  const { rectMode } = useModes()
   const [measured, setMeasured] = useState<MeasuredLayer | null>(null)
 
   useEffect(() => {
     const container = containerRef.current
-    if (pdf === null || textContent === null || model === null || container === null) {
+    // The precise strategy measures with the fonts that PDF.js registers while it draws the
+    // canvas, so measuring waits until the canvas for this page and scale is done.
+    if (
+      !isCanvasRendered ||
+      pdf === null ||
+      textContent === null ||
+      model === null ||
+      container === null
+    ) {
       return
     }
 
@@ -57,13 +70,22 @@ export function PageTextLayer() {
 
         return layer.render().then(() => {
           if (isActive) {
-            const strategy = new NaiveRectStrategy(model, layer.textDivs, container)
+            const naive = new NaiveRectStrategy(model, layer.textDivs, container)
+            const precise = new PreciseRectStrategy(
+              model,
+              textContent.styles,
+              viewport.transform,
+              naive,
+            )
             setMeasured({
               pdf,
               pageNumber,
               scale,
               model,
-              layout: measurePageLayout(model, strategy),
+              layouts: {
+                naive: measurePageLayout(model, naive),
+                precise: measurePageLayout(model, precise),
+              },
             })
           }
         })
@@ -77,16 +99,17 @@ export function PageTextLayer() {
       textLayer?.cancel()
       container.replaceChildren()
     }
-  }, [pdf, pageNumber, scale, textContent, model])
+  }, [pdf, pageNumber, scale, textContent, model, isCanvasRendered])
 
-  const layout =
+  const layouts =
     measured !== null &&
     measured.pdf === pdf &&
     measured.pageNumber === pageNumber &&
     measured.scale === scale &&
     measured.model === model
-      ? measured.layout
+      ? measured.layouts
       : null
+  const layout = layouts?.[rectMode] ?? null
 
   function handleClick(event: MouseEvent<HTMLDivElement>) {
     // A drag that selected text is not a click on a word.
@@ -107,7 +130,7 @@ export function PageTextLayer() {
       {/* biome-ignore lint/a11y/useKeyWithClickEvents: the arrow hotkeys move between words */}
       {/* biome-ignore lint/a11y/noStaticElementInteractions: clicks land on the PDF text spans */}
       <div ref={containerRef} className="text-layer" onClick={handleClick} />
-      <HighlightOverlay layout={layout} />
+      <HighlightOverlay layouts={layouts} />
     </>
   )
 }

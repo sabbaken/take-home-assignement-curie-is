@@ -42,10 +42,11 @@ tmp/plan.md                        Implementation plan (in Russian)
      middle of a long line drift away from the real glyphs.
    - **Precise:** positions each item from its transform, which gives the baseline and the font
      size. The vertical extent comes from the font's ascent and descent. Horizontal offsets come
-     from measuring string prefixes with the embedded font that PDF.js has already registered
-     for the canvas, so kerning is included. The measurements are then scaled to the item's real
-     width. If the font is not loaded, or it is a Type3 font, the item falls back to the naive
-     strategy.
+     from measuring string prefixes with the embedded font that PDF.js registers while it draws
+     the canvas. That is the font the glyphs were actually drawn with, not a fallback. The
+     measurements are then scaled to the item's real width. An item falls back to the naive
+     strategy when its font is not loaded or is a Type3 font, and when its text is rotated,
+     vertical or right-to-left.
 4. **Highlight.** Boxes on the same line are merged. The sentence is drawn as a light,
    rounded outline and the current word as a brighter rounded rectangle on top of it. Debug mode
    outlines every word with both strategies in different colours, so the gap between them is
@@ -56,8 +57,14 @@ tmp/plan.md                        Implementation plan (in Russian)
 
 Press `?` in the app to see the keyboard shortcuts.
 
-**Out of scope:** rotated and vertical text, and a dedicated mobile layout. On narrow screens the
-panels only wrap.
+**Out of scope:** precise boxes for rotated, vertical and right-to-left text (these items fall back
+to the naive strategy), and a dedicated mobile layout. On narrow screens the panels only wrap.
+
+**Known limitations of the precise strategy:** PDF.js strips the kerning tables when it repacks
+an embedded font, and the text content does not include the gaps between words. The widths inside
+an item are therefore scaled evenly, which spreads justified word spacing and kerning across the
+whole line. Ligatures are split into their letters in the text content, so a ligature glyph is
+measured as separate letters.
 
 ## Status
 
@@ -68,9 +75,10 @@ panels only wrap.
 - [x] Line-merging and SVG path helpers.
 - [x] TextLayer and SVG overlay on the page.
 - [x] Naive strategy wired to the page. Clicking a word highlights it and starts reading there.
-- [ ] Precise strategy. Until it lands, the Naive/Precise toggle has no effect.
+- [x] Precise strategy with a per-item fallback to the naive one. The Naive/Precise toggle picks
+      the strategy for the highlight and for clicks.
 - [ ] Sentence drawn as one continuous stepped outline. For now it is one rounded box per line.
-- [x] Debug overlay with naive outlines and word and sentence counts. Precise outlines are next.
+- [x] Debug overlay with naive and precise outlines drawn together, and word and sentence counts.
 - [x] Speech playback: sentence by sentence, word sync from `boundary` events with a timer
       fallback, word and sentence navigation, speed, autoscroll, and moving on to the next page.
 - [ ] Test PDFs: a two-column arXiv paper, justified text, and a document with several fonts.
@@ -91,8 +99,9 @@ pnpm fix          # auto-fix formatting, imports and lint
 ```
 
 - Tests run in jsdom, which has no layout engine and no canvas. The `src/core` tests therefore
-  cover the pure logic: segmentation, the character map, line merging and path strings. The
-  rectangles themselves have to be checked in the browser in debug mode.
+  cover the pure logic: segmentation, the character map, line merging, path strings and the
+  precise strategy's geometry with a fake font measurer. The rectangles themselves have to be
+  checked in the browser in debug mode.
 - To add a shadcn/ui component, run `pnpm exec shadcn add <component>`.
 
 ## Deploy

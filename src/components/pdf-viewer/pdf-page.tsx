@@ -96,7 +96,7 @@ export function PdfPage() {
   return (
     <div className="canvas-wrap" aria-busy={isBusy}>
       <canvas ref={canvasRef} className="pdf-canvas" aria-label={`Page ${pageNumber}`} />
-      <PageTextLayer />
+      <PageTextLayer isCanvasRendered={isCurrent} />
       {isBusy && (
         <div className="page-loading" role="status">
           <LoaderCircleIcon />

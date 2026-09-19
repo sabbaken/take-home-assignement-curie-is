@@ -1,21 +1,28 @@
 import { useEffect, useMemo, useRef } from 'react'
 import { type PageLayout, type Rect, roundedRectsPath } from '@/core/rects'
-import { useModes } from './state/modes'
+import { type RectMode, useModes } from './state/modes'
 import { usePlayer } from './state/player'
 
 const SENTENCE_PADDING = 2
 const SENTENCE_RADIUS = 6
 const WORD_PADDING = 1.5
 const WORD_RADIUS = 3
+const DEBUG_RADIUS = 1.5
 
 function getRects(rectsByIndex: Rect[][] | undefined, index: number | null) {
   return index === null ? [] : (rectsByIndex?.[index] ?? [])
 }
 
-export function HighlightOverlay({ layout }: { layout: PageLayout | null }) {
+function getDebugPath(layout: PageLayout) {
+  return roundedRectsPath(layout.words.flat(), 0, DEBUG_RADIUS)
+}
+
+// Highlights with the selected strategy. Debug mode outlines every word with both strategies.
+export function HighlightOverlay({ layouts }: { layouts: Record<RectMode, PageLayout> | null }) {
   const wordAnchorRef = useRef<SVGRectElement>(null)
-  const { isDebug } = useModes()
+  const { rectMode, isDebug } = useModes()
   const { wordIndex, sentenceIndex } = usePlayer()
+  const layout = layouts?.[rectMode] ?? null
 
   const sentencePath = roundedRectsPath(
     getRects(layout?.sentences, sentenceIndex),
@@ -26,9 +33,12 @@ export function HighlightOverlay({ layout }: { layout: PageLayout | null }) {
   const wordPath = roundedRectsPath(wordRects, WORD_PADDING, WORD_RADIUS)
   const wordAnchor = wordRects[0]
 
-  const debugPath = useMemo(
-    () => (isDebug && layout !== null ? roundedRectsPath(layout.words.flat(), 0, 1.5) : ''),
-    [isDebug, layout],
+  const debugPaths = useMemo(
+    () =>
+      isDebug && layouts !== null
+        ? { naive: getDebugPath(layouts.naive), precise: getDebugPath(layouts.precise) }
+        : null,
+    [isDebug, layouts],
   )
 
   // Keeps the active word in view, also after a zoom moves it. It scrolls to an unanimated anchor,
@@ -58,7 +68,12 @@ export function HighlightOverlay({ layout }: { layout: PageLayout | null }) {
           height={wordAnchor.height}
         />
       )}
-      {debugPath !== '' && <path className="debug-outline naive" d={debugPath} />}
+      {debugPaths !== null && (
+        <>
+          <path className="debug-outline naive" d={debugPaths.naive} />
+          <path className="debug-outline precise" d={debugPaths.precise} />
+        </>
+      )}
     </svg>
   )
 }
