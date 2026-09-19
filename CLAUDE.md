@@ -42,23 +42,34 @@ paths.
 ### `src/core/`: framework-free text and geometry
 
 - `text-model.ts`: `buildPageTextModel` joins the `getTextContent()` items into one page string.
-  It inserts a space or `\n` between items when needed. `characterSources[i]` maps each character
+  Items on the same line are joined as is, because PDF.js already emits whitespace items for
+  visual gaps. `hasEOL` on an item (a wrapped line) becomes a space. An empty item with `hasEOL`
+  marks a new text block (a heading, a paragraph, a footnote) and becomes `\n`. This matters because
+  `Intl.Segmenter` ends a sentence at every `\n`. `characterSources[i]` maps each UTF-16 code unit
   back to `{ itemIndex, offset }` in the source item, and inserted separators map to `null`.
   Words (`isWordLike`) and sentences come from `Intl.Segmenter` as `[start, end)` ranges over that
-  string. `findWordIndex` and `findSentenceIndex` turn a speech `charIndex` into the active range.
+  string. Sentences without words are dropped, so every sentence has something to read.
+  `findWordIndex` and `findSentenceIndex` turn a speech `charIndex` into the active range.
 - `rects.ts`: the `RectStrategy` interface (`getRects(start, end) → Rect[]`) that both strategies
   implement, `mergeRectsByLine` (one box per visual line), `roundedRectsPath` (SVG path data) and
-  `NaiveRectStrategy`. The naive strategy indexes `textDivs` by the model's `itemIndex`. That only
-  works if the TextLayer's divs line up one-to-one with the filtered items, which the plan flags as
-  still unverified. Rects are in pixels, relative to the page container.
+  `NaiveRectStrategy`. The naive strategy indexes `textDivs` by the model's `itemIndex` and measures
+  one `Range` per item (`sliceByItem`). This works because the PDF.js TextLayer creates one span for
+  every item that has `str`, empty ones included (verified in `pdfjs-dist` 6.3). Rects are in
+  pixels, relative to the TextLayer, which covers the page. `measurePageLayout` measures every word
+  and sentence once per render, so rendering and hit testing (`findWordAtPoint`) are pure.
+- `speech.ts`: `readAloud` speaks one sentence per `SpeechSynthesisUtterance`, maps `boundary`
+  events back to word indexes, falls back to a timer when the voice sends none, and returns a
+  cancel function for effect cleanup.
 - Keep this layer free of React so it stays unit-testable. jsdom has no layout or canvas, so the
-  tests cover only the pure logic (segmentation, merging, path strings), not the real rectangles.
+  tests cover only the pure logic (segmentation, merging, path strings, speech with a fake
+  `speechSynthesis`), not the real rectangles.
 
 ### `src/components/pdf-viewer/`: the single screen
 
 - `PdfViewer` composes floating panels (document, modes, player, view, debug legend) around a
   central `DocumentStage` inside a `DropZone` (drop a PDF anywhere to open it).
-- State is split into four contexts in `state/`: `document`, `viewport`, `modes` and `player`.
+- State is split into five contexts in `state/`: `document`, `viewport`, `page-text` (the current
+  page's `TextContent` and text model), `modes` and `player`.
   `PdfViewerProvider` composes them. They are separate so that fast-changing state, such as the
   active word during playback, re-renders only the components that read it. Each is a
   `useXState()` hook that returns a memoised object, exposed through
@@ -66,6 +77,10 @@ paths.
   cross-panel state to the domain it belongs to rather than to a new global store.
 - Each panel registers its own hotkeys with `useHotkey` from `@tanstack/react-hotkeys`. The full
   list shown to users is in `shortcuts-popover.tsx`, so update it when you add a key.
+- `state/player.ts` holds the active word (`cursor`) and, while playing, the reading `session`.
+  Seeking, pausing or changing speed replaces the session, and the speech effect restarts from it.
+  Pause cancels speech instead of calling `speechSynthesis.pause()`, which is unreliable in Chrome.
+  At the end of a page, reading moves on to the next one.
 - `state/document.ts` configures the PDF.js worker (`new URL('pdfjs-dist/build/pdf.worker.min.mjs',
   import.meta.url)`) and loads either the bundled `public/sample.pdf` or a local `File`.
 
@@ -73,8 +88,7 @@ paths.
 
 The app runs under `StrictMode`, so effects mount twice. Every PDF.js task effect uses an
 `isActive` flag, calls `cancel()`/`destroy()` in cleanup, and ignores
-`RenderingCancelledException`. `PdfPage` and `useDocumentState` show the pattern. Apply it to
-TextLayer rendering as well.
+`RenderingCancelledException`. `PdfPage`, `PageTextLayer` and `useDocumentState` show the pattern.
 
 Prefer deriving state over syncing it inside effects. `PdfPage` works out whether it is loading by
 comparing the inputs of the last finished render with the current ones. `useViewportState` keys
@@ -82,11 +96,13 @@ the page number to the `pdf` instance, so a new document starts on page 1 withou
 
 ### Plan constraints that are easy to miss
 
-- Zoom must re-render the page at the new scale and rebuild the text model. Never use a CSS
-  transform, because the canvas text blurs and the rects drift.
-- The page container should stack three layers: canvas, then TextLayer, then an `<svg>` overlay.
-  Right now `pdf-page.tsx` renders only the canvas. The player state, the word and sentence
-  navigation buttons and the sentence counter are still UI stubs.
+- Zoom must re-render the page at the new scale. Never use a CSS transform, because the canvas
+  text blurs and the rects drift. The text model does not depend on scale, so it is built once per
+  page, but the TextLayer and the measured rects are rebuilt at every scale.
+- The page container stacks three layers: canvas, then TextLayer (`page-text-layer.tsx`), then the
+  `<svg>` overlay (`highlight-overlay.tsx`). Clicking a word seeks there and starts reading.
+- The Naive/Precise toggle has no effect yet: only the naive strategy exists, and debug mode
+  outlines words with it alone.
 - The precise strategy (plan step 3) measures **prefixes** (`measureText(str.slice(0, i))`) so
   kerning is included, then scales the result to `item.width × scale`. It falls back to the naive
   strategy per item when the font is not loaded or is Type3. Rotated and vertical text is out of

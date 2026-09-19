@@ -34,7 +34,7 @@ function segmentWords(text: string, locale?: string) {
     }))
 }
 
-function segmentSentences(text: string, locale?: string) {
+function segmentSentences(text: string, words: TextRange[], locale?: string) {
   const segmenter = new Intl.Segmenter(locale, { granularity: 'sentence' })
 
   return Array.from(segmenter.segment(text)).flatMap(segment => {
@@ -42,44 +42,65 @@ function segmentSentences(text: string, locale?: string) {
     const trailingWhitespace = segment.segment.match(/\s*$/u)?.[0].length ?? 0
     const start = segment.index + leadingWhitespace
     const end = segment.index + segment.segment.length - trailingWhitespace
+    // Sentences without words (a lone footnote mark, a dash) have nothing to read or navigate to.
+    const hasWords = words.some(word => word.start >= start && word.end <= end)
 
-    return start < end ? [{ start, end, text: text.slice(start, end) }] : []
+    return start < end && hasWords ? [{ start, end, text: text.slice(start, end) }] : []
   })
 }
 
-function needsSeparator(previous: PdfTextItem | undefined, current: PdfTextItem) {
-  if (previous === undefined || previous.str.length === 0 || current.str.length === 0) {
-    return false
+function getSeparator(text: string, current: string, pendingBreak: 'line' | 'block' | null) {
+  if (text.length === 0 || pendingBreak === null) {
+    return ''
   }
-
-  return !/\s$/u.test(previous.str) && !/^\s/u.test(current.str)
+  // `Intl.Segmenter` ends a sentence at every `\n`, so only block breaks get one. A wrapped line
+  // becomes a space, and a sentence can continue onto the next line.
+  if (pendingBreak === 'block') {
+    return '\n'
+  }
+  return /\s$/u.test(text) || /^\s/u.test(current) ? '' : ' '
 }
 
 export function buildPageTextModel(sourceItems: PdfTextItem[], locale?: string): PageTextModel {
   const items = sourceItems.filter(item => typeof item.str === 'string')
   const characterSources: Array<CharacterSource | null> = []
   let text = ''
+  // PDF.js already emits whitespace items for visual gaps inside a line, so items on the same line
+  // are joined as is. `hasEOL` on an item means the line wraps after it. An empty item with
+  // `hasEOL` means a new text block starts after it, such as a heading, a new paragraph or a footnote.
+  let pendingBreak: 'line' | 'block' | null = null
 
   items.forEach((item, itemIndex) => {
-    const previous = items[itemIndex - 1]
+    if (item.str.length === 0) {
+      if (item.hasEOL) {
+        pendingBreak = 'block'
+      }
+      return
+    }
 
-    if (needsSeparator(previous, item)) {
-      text += previous?.hasEOL ? '\n' : ' '
+    const separator = getSeparator(text, item.str, pendingBreak)
+    if (separator !== '') {
+      text += separator
       characterSources.push(null)
     }
 
-    for (const [offset, character] of Array.from(item.str).entries()) {
-      text += character
+    // Offsets are UTF-16 code units, which is what `Range`, `String#slice` and speech
+    // `charIndex` all use.
+    for (let offset = 0; offset < item.str.length; offset += 1) {
       characterSources.push({ itemIndex, offset })
     }
+    text += item.str
+    pendingBreak = item.hasEOL ? 'line' : null
   })
+
+  const words = segmentWords(text, locale)
 
   return {
     text,
     items,
     characterSources,
-    words: segmentWords(text, locale),
-    sentences: segmentSentences(text, locale),
+    words,
+    sentences: segmentSentences(text, words, locale),
   }
 }
 
@@ -107,4 +128,15 @@ export function findSentenceIndex(model: PageTextModel, characterIndex: number) 
 
   const nextIndex = model.sentences.findIndex(sentence => sentence.start >= characterIndex)
   return nextIndex >= 0 ? nextIndex : Math.max(0, model.sentences.length - 1)
+}
+
+export function findSentenceIndexOfWord(model: PageTextModel, wordIndex: number) {
+  const word = model.words[wordIndex]
+  return word === undefined ? null : findSentenceIndex(model, word.start)
+}
+
+// Every sentence contains at least one word, so this word always lies inside the sentence.
+export function findFirstWordOfSentence(model: PageTextModel, sentenceIndex: number) {
+  const sentence = model.sentences[sentenceIndex]
+  return sentence === undefined ? null : findWordIndex(model, sentence.start)
 }

@@ -21,7 +21,7 @@ glyphs drawn on the canvas, not only roughly near them.
 ```
 src/core/                          Framework-free text model and rectangle strategies (unit-tested)
 src/components/pdf-viewer/         The single screen: page stage, floating panels, shortcuts
-src/components/pdf-viewer/state/   Four contexts (document, viewport, modes, player)
+src/components/pdf-viewer/state/   Five contexts (document, viewport, page text, modes, player)
 src/components/ui/                 shadcn/ui primitives
 public/sample.pdf                  Sample document opened on first load
 tmp/plan.md                        Implementation plan (in Russian)
@@ -66,12 +66,13 @@ panels only wrap.
       shortcuts.
 - [x] Text model: item joining, a character → item map, and word and sentence segmentation.
 - [x] Line-merging and SVG path helpers.
-- [ ] TextLayer and SVG overlay on the page.
-- [ ] Naive strategy wired to the page. The class exists in `src/core/rects.ts`.
-- [ ] Precise strategy.
-- [ ] Sentence drawn as one continuous stepped outline.
-- [ ] Debug overlay. The Naive/Precise toggle and the legend already exist.
-- [ ] Speech playback. The player UI exists.
+- [x] TextLayer and SVG overlay on the page.
+- [x] Naive strategy wired to the page. Clicking a word highlights it and starts reading there.
+- [ ] Precise strategy. Until it lands, the Naive/Precise toggle has no effect.
+- [ ] Sentence drawn as one continuous stepped outline. For now it is one rounded box per line.
+- [x] Debug overlay with naive outlines and word and sentence counts. Precise outlines are next.
+- [x] Speech playback: sentence by sentence, word sync from `boundary` events with a timer
+      fallback, word and sentence navigation, speed, autoscroll, and moving on to the next page.
 - [ ] Test PDFs: a two-column arXiv paper, justified text, and a document with several fonts.
 
 ## Development

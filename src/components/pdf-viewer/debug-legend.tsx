@@ -1,7 +1,9 @@
 import { useModes } from './state/modes'
+import { usePageText } from './state/page-text'
 
 export function DebugLegend() {
   const { isDebug } = useModes()
+  const { model } = usePageText()
 
   if (!isDebug) {
     return null
@@ -17,7 +19,11 @@ export function DebugLegend() {
         <i className="legend-swatch precise" />
         Precise rects
       </div>
-      <span className="legend-count">Text metrics appear after extraction</span>
+      <span className="legend-count">
+        {model === null
+          ? 'Extracting text…'
+          : `${model.words.length} words · ${model.sentences.length} sentences`}
+      </span>
     </div>
   )
 }

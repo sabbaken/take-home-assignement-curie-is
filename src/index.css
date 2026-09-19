@@ -81,6 +81,7 @@
 
 .canvas-wrap {
   position: relative;
+  isolation: isolate;
   width: max-content;
   min-width: 24rem;
   min-height: 34rem;
@@ -95,6 +96,82 @@
   display: block;
   max-width: none;
   background: white;
+}
+
+/* Mirrors the TextLayer rules from pdfjs-dist/web/pdf_viewer.css. PDF.js positions the spans in
+   percent of the layer and sizes them through these custom properties. */
+.text-layer {
+  --scale-round-x: 1px;
+  --scale-round-y: 1px;
+  --min-font-size: 1;
+  --text-scale-factor: calc(var(--total-scale-factor) * var(--min-font-size));
+  --min-font-size-inv: calc(1 / var(--min-font-size));
+  position: absolute;
+  inset: 0;
+  overflow: clip;
+  line-height: 1;
+  text-align: initial;
+  letter-spacing: normal;
+  word-spacing: normal;
+  text-size-adjust: none;
+  forced-color-adjust: none;
+  transform-origin: 0 0;
+  caret-color: CanvasText;
+}
+
+.text-layer :is(span, br) {
+  position: absolute;
+  color: transparent;
+  white-space: pre;
+  cursor: text;
+  transform-origin: 0% 0%;
+}
+
+.text-layer > span {
+  --font-height: 0;
+  --scale-x: 1;
+  --rotate: 0deg;
+  font-size: calc(var(--text-scale-factor) * var(--font-height));
+  transform: rotate(var(--rotate)) scaleX(var(--scale-x)) scale(var(--min-font-size-inv));
+}
+
+.text-layer ::selection {
+  background: rgb(66 98 255 / 25%);
+  color: transparent;
+}
+
+.highlight-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+
+.sentence-highlight {
+  fill: rgb(224 227 255);
+}
+
+.word-highlight {
+  fill: rgb(171 179 254);
+  transition: d 80ms ease-out;
+}
+
+.word-anchor {
+  fill: none;
+  scroll-margin: 6rem 3rem 8.5rem;
+}
+
+.debug-outline {
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.debug-outline.naive {
+  fill: rgb(239 71 111 / 10%);
+  stroke: #ef476f;
 }
 
 .page-loading {

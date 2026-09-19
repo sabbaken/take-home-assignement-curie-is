@@ -7,8 +7,26 @@ export type Rect = {
   height: number
 }
 
+export type Point = {
+  x: number
+  y: number
+}
+
 export interface RectStrategy {
   getRects(start: number, end: number): Rect[]
+}
+
+// Rects of every word and sentence on the page, indexed like `model.words` and `model.sentences`.
+export type PageLayout = {
+  words: Rect[][]
+  sentences: Rect[][]
+}
+
+// A run of consecutive characters from one item, as `[start, end)` offsets into its string.
+export type ItemSlice = {
+  itemIndex: number
+  start: number
+  end: number
 }
 
 function isSameLine(left: Rect, right: Rect) {
@@ -39,26 +57,30 @@ export function mergeRectsByLine(rects: Rect[]) {
   return merged
 }
 
-function findMappedCharacter(model: PageTextModel, start: number, end: number, fromEnd = false) {
-  if (fromEnd) {
-    for (let index = end - 1; index >= start; index -= 1) {
-      const source = model.characterSources[index]
-      if (source !== null && source !== undefined) {
-        return source
-      }
-    }
-    return null
-  }
+// Splits a page text range into per-item runs. Inserted separators have no source and are skipped.
+export function sliceByItem(model: PageTextModel, start: number, end: number) {
+  const slices: ItemSlice[] = []
 
   for (let index = start; index < end; index += 1) {
     const source = model.characterSources[index]
-    if (source !== null && source !== undefined) {
-      return source
+    if (source === null || source === undefined) {
+      continue
+    }
+
+    const last = slices.at(-1)
+    if (last !== undefined && last.itemIndex === source.itemIndex && last.end === source.offset) {
+      last.end += 1
+    } else {
+      slices.push({ itemIndex: source.itemIndex, start: source.offset, end: source.offset + 1 })
     }
   }
-  return null
+
+  return slices
 }
 
+// Measures one `Range` per item on the TextLayer spans. PDF.js creates one span for every text
+// item, empty ones included, so `textDivs` lines up with `model.items`. The spans use a fallback
+// font stretched to the item width, so boxes drift from the glyphs drawn on the canvas.
 export class NaiveRectStrategy implements RectStrategy {
   constructor(
     private readonly model: PageTextModel,
@@ -67,35 +89,65 @@ export class NaiveRectStrategy implements RectStrategy {
   ) {}
 
   getRects(start: number, end: number) {
-    const first = findMappedCharacter(this.model, start, end)
-    const last = findMappedCharacter(this.model, start, end, true)
-
-    if (first === null || last === null) {
-      return []
-    }
-
-    const firstNode = this.textDivs[first.itemIndex]?.firstChild
-    const lastNode = this.textDivs[last.itemIndex]?.firstChild
-
-    if (!(firstNode instanceof Text) || !(lastNode instanceof Text)) {
-      return []
-    }
-
-    const range = document.createRange()
-    range.setStart(firstNode, Math.min(first.offset, firstNode.length))
-    range.setEnd(lastNode, Math.min(last.offset + 1, lastNode.length))
-
     const containerRect = this.container.getBoundingClientRect()
-    const rects = Array.from(range.getClientRects(), rect => ({
-      x: rect.left - containerRect.left,
-      y: rect.top - containerRect.top,
-      width: rect.width,
-      height: rect.height,
-    })).filter(rect => rect.width > 0 && rect.height > 0)
+    const range = document.createRange()
+    const rects: Rect[] = []
 
-    range.detach()
+    for (const slice of sliceByItem(this.model, start, end)) {
+      const node = this.textDivs[slice.itemIndex]?.firstChild
+      if (!(node instanceof Text)) {
+        continue
+      }
+
+      range.setStart(node, Math.min(slice.start, node.length))
+      range.setEnd(node, Math.min(slice.end, node.length))
+
+      for (const rect of Array.from(range.getClientRects())) {
+        if (rect.width > 0 && rect.height > 0) {
+          rects.push({
+            x: rect.left - containerRect.left,
+            y: rect.top - containerRect.top,
+            width: rect.width,
+            height: rect.height,
+          })
+        }
+      }
+    }
+
     return mergeRectsByLine(rects)
   }
+}
+
+export function measurePageLayout(model: PageTextModel, strategy: RectStrategy): PageLayout {
+  return {
+    words: model.words.map(word => strategy.getRects(word.start, word.end)),
+    sentences: model.sentences.map(sentence => strategy.getRects(sentence.start, sentence.end)),
+  }
+}
+
+function distanceToRect(point: Point, rect: Rect) {
+  const dx = Math.max(rect.x - point.x, 0, point.x - (rect.x + rect.width))
+  const dy = Math.max(rect.y - point.y, 0, point.y - (rect.y + rect.height))
+  return Math.hypot(dx, dy)
+}
+
+// Returns the word under the point, or the closest one within `tolerance` pixels, so a click in
+// the gap between two words still lands on one of them.
+export function findWordAtPoint(wordRects: Rect[][], point: Point, tolerance = 4) {
+  let closestIndex: number | null = null
+  let closestDistance = Number.POSITIVE_INFINITY
+
+  for (const [index, rects] of wordRects.entries()) {
+    for (const rect of rects) {
+      const distance = distanceToRect(point, rect)
+      if (distance < closestDistance) {
+        closestIndex = index
+        closestDistance = distance
+      }
+    }
+  }
+
+  return closestDistance <= tolerance ? closestIndex : null
 }
 
 export function roundedRectsPath(rects: Rect[], padding = 0, radius = 4) {

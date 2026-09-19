@@ -2,6 +2,7 @@ import { LoaderCircleIcon } from 'lucide-react'
 import type { PDFDocumentProxy, RenderTask } from 'pdfjs-dist'
 import { useEffect, useRef, useState } from 'react'
 import { ErrorState } from './error-state'
+import { PageTextLayer } from './page-text-layer'
 import { useDocument } from './state/document'
 import { useViewport } from './state/viewport'
 
@@ -95,6 +96,7 @@ export function PdfPage() {
   return (
     <div className="canvas-wrap" aria-busy={isBusy}>
       <canvas ref={canvasRef} className="pdf-canvas" aria-label={`Page ${pageNumber}`} />
+      <PageTextLayer />
       {isBusy && (
         <div className="page-loading" role="status">
           <LoaderCircleIcon />
