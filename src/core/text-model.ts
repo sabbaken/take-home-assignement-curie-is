@@ -25,14 +25,51 @@ export type PageTextModel<Item extends PdfTextItem = PdfTextItem> = {
 
 function segmentWords(text: string, locale?: string) {
   const segmenter = new Intl.Segmenter(locale, { granularity: 'word' })
-
-  return Array.from(segmenter.segment(text))
+  const words = Array.from(segmenter.segment(text))
     .filter(segment => segment.isWordLike)
     .map(segment => ({
       start: segment.index,
       end: segment.index + segment.segment.length,
       text: segment.segment,
     }))
+
+  // `Intl.Segmenter` treats the pieces of hyphenated words and email addresses as separate words.
+  // Speech engines commonly report one boundary for the whole token, though, which would leave
+  // only its first piece highlighted. Keep those tokens in one range so speech and geometry agree.
+  const hyphenatedWords = words.reduce<TextRange[]>((merged, word) => {
+    const previous = merged.at(-1)
+    const connector = previous === undefined ? '' : text.slice(previous.end, word.start)
+
+    if (previous !== undefined && /^[-\u00AD\u2010\u2011]+$/u.test(connector)) {
+      previous.end = word.end
+      previous.text = text.slice(previous.start, previous.end)
+    } else {
+      merged.push({ ...word })
+    }
+
+    return merged
+  }, [])
+
+  const emailRanges = Array.from(
+    text.matchAll(
+      /[\p{L}\p{N}][\p{L}\p{N}._%+'-]*@[\p{L}\p{N}](?:[\p{L}\p{N}-]*[\p{L}\p{N}])?(?:\.[\p{L}\p{N}](?:[\p{L}\p{N}-]*[\p{L}\p{N}])?)+/gu,
+    ),
+    match => ({
+      start: match.index,
+      end: match.index + match[0].length,
+      text: match[0],
+    }),
+  )
+
+  return hyphenatedWords.reduce<TextRange[]>((merged, word) => {
+    const email = emailRanges.find(range => word.start >= range.start && word.end <= range.end)
+    if (email === undefined) {
+      merged.push(word)
+    } else if (merged.at(-1)?.start !== email.start) {
+      merged.push(email)
+    }
+    return merged
+  }, [])
 }
 
 function segmentSentences(text: string, words: TextRange[], locale?: string) {

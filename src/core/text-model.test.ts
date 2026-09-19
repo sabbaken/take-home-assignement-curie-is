@@ -37,6 +37,30 @@ describe('buildPageTextModel', () => {
     expect(model.text).toBe('type-stable, meaning')
   })
 
+  it('keeps hyphenated words and email addresses in one highlight range', () => {
+    const model = buildPageTextModel([
+      {
+        str: 'A data-rich, user-facing app by name.surname@gmail.com.',
+        hasEOL: false,
+      },
+    ])
+
+    expect(model.words.map(word => word.text)).toEqual([
+      'A',
+      'data-rich',
+      'user-facing',
+      'app',
+      'by',
+      'name.surname@gmail.com',
+    ])
+  })
+
+  it('supports typographic hyphens without merging ordinary punctuation', () => {
+    const model = buildPageTextModel([{ str: 'Jean‑Luc re‐enters—then stops.', hasEOL: false }])
+
+    expect(model.words.map(word => word.text)).toEqual(['Jean‑Luc', 're‐enters', 'then', 'stops'])
+  })
+
   it('wraps lines with a space so a sentence continues onto the next line', () => {
     const model = buildPageTextModel([
       { str: 'Dynamic languages are hard', hasEOL: true },
