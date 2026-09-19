@@ -28,14 +28,13 @@ pnpm lint                         # eslint, --max-warnings=0
 pnpm typecheck                    # tsc --noEmit
 pnpm check                        # biome check + lint + typecheck + test
 pnpm fix                          # biome --write + eslint --fix
-pnpm validate                     # check + build (this is what CI runs)
+pnpm validate                     # full local validation: check + production build
 pnpm exec shadcn add <component>  # add a shadcn/ui primitive into src/components/ui
 ```
 
-Every push to `main` runs `pnpm validate` and deploys `dist` to GitHub Pages
-(`.github/workflows/deploy.yml`). Vite uses `base: './'`, so reference files in `public/` through
-`import.meta.env.BASE_URL` (see `createDefaultSource` in `state/document.ts`), not through absolute
-paths.
+Vercel handles production deployments from `main`: it runs the Vite production build and serves
+`dist`. Vite uses `base: './'`, so reference files in `public/` through `import.meta.env.BASE_URL`
+(see `createDefaultSource` in `state/document.ts`), not through absolute paths.
 
 ## Architecture
 

@@ -4,9 +4,7 @@ A single-page proof of concept for PDF narration. It renders a PDF with PDF.js a
 the sentence and word being read aloud. The focus is making the highlight land exactly on the
 glyphs drawn on the canvas, not only roughly near them.
 
-**[Live demo](https://sabbaken.github.io/pdf-narration-reader/)** · **[How it works](#how-it-works)** · **[Status](#status)**
-
-[![Deploy status](https://github.com/sabbaken/pdf-narration-reader/actions/workflows/deploy.yml/badge.svg)](https://github.com/sabbaken/pdf-narration-reader/actions/workflows/deploy.yml)
+**[Live demo](https://take-home-assignment-pdf-narration-reader.vercel.app/)** · **[How it works](#how-it-works)** · **[Status](#status)**
 
 > [!IMPORTANT]
 > Please open the live demo in **Google Chrome**, which is currently the only supported browser.
@@ -19,7 +17,7 @@ glyphs drawn on the canvas, not only roughly near them.
 - **PDF:** `pdfjs-dist` (canvas rendering, text content, TextLayer)
 - **UI:** Tailwind CSS 4, shadcn/ui on Radix, lucide icons, TanStack Hotkeys
 - **Tooling:** Vitest + Testing Library (jsdom), ESLint, Biome
-- **Deploy:** GitHub Actions → GitHub Pages
+- **Deploy:** Vercel
 
 ## Layout
 
@@ -111,12 +109,11 @@ pnpm fix          # auto-fix formatting, imports and lint
 
 ## Deploy
 
-Every push to `main` runs `pnpm validate` (Biome, ESLint, tsc, Vitest and a production build) and
-publishes `dist` to GitHub Pages. This needs a one-time setup: in the repository settings, go to
-**Pages** and set **Source** to **GitHub Actions**.
+Vercel automatically creates a production deployment from `main`. It runs the Vite production
+build and serves the generated `dist` directory.
 
-Vite uses a relative base path (`base: './'`), so the same build works on a project page and on a
-custom domain.
+Vite uses a relative base path (`base: './'`), so the build also works with Vercel preview
+deployments and custom domains.
 
 ## Build
 
