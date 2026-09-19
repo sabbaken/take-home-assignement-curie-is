@@ -8,6 +8,12 @@ glyphs drawn on the canvas, not only roughly near them.
 
 [![Deploy status](https://github.com/sabbaken/take-home-assignment-curie/actions/workflows/deploy.yml/badge.svg)](https://github.com/sabbaken/take-home-assignment-curie/actions/workflows/deploy.yml)
 
+> [!IMPORTANT]
+> Please open the live demo in **Google Chrome**. This take-home assignment was implemented under
+> a tight time constraint, and Chrome is currently the only supported browser. Safari requires
+> additional browser-specific API work that was outside the available timeframe, so the current
+> proof of concept does not work there.
+
 ## Stack
 
 - **App:** React 19 + TypeScript, Vite 8
