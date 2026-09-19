@@ -385,18 +385,6 @@
   color: var(--muted-foreground);
 }
 
-.sentence-progress {
-  color: var(--muted-foreground);
-  font-size: 0.75rem;
-  white-space: nowrap;
-}
-
-.sentence-progress strong {
-  color: var(--foreground);
-  font-variant-numeric: tabular-nums;
-  font-weight: 650;
-}
-
 .timer-sync {
   display: grid;
   width: 1.75rem;
@@ -728,7 +716,6 @@ kbd {
     justify-content: flex-start;
   }
 
-  .sentence-progress,
   .timer-sync {
     display: none;
   }

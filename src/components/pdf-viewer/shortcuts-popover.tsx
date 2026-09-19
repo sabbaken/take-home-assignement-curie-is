@@ -6,8 +6,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 
 const SHORTCUTS = [
   { label: 'Play or pause', keys: ['Space'] },
-  { label: 'Previous / next word', keys: ['←', '→'] },
-  { label: 'Previous / next sentence', keys: ['⇧', '←', '→'] },
+  { label: 'Previous / next sentence', keys: ['←', '→'] },
   { label: 'Stop', keys: ['Esc'] },
   { label: 'Zoom', keys: ['−', '+'] },
   { label: 'Debug / strategy', keys: ['D', 'N'] },

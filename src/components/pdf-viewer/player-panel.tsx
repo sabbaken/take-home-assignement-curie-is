@@ -5,29 +5,20 @@ import {
   PlayIcon,
   SkipBackIcon,
   SkipForwardIcon,
-  SquareIcon,
-  StepBackIcon,
-  StepForwardIcon,
   TimerIcon,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { usePageText } from './state/page-text'
 import { usePlayer } from './state/player'
 
 export function PlayerPanel() {
-  const { model } = usePageText()
   const {
     isSupported,
     isPlaying,
     isTimerSync,
     speed,
-    sentenceIndex,
-    sentenceCount,
     hasText,
     togglePlayback,
     stop,
-    previousWord,
-    nextWord,
     previousSentence,
     nextSentence,
     cycleSpeed,
@@ -35,10 +26,8 @@ export function PlayerPanel() {
 
   useHotkey('Space', togglePlayback)
   useHotkey('Escape', stop)
-  useHotkey('ArrowLeft', previousWord)
-  useHotkey('ArrowRight', nextWord)
-  useHotkey('Shift+ArrowLeft', previousSentence)
-  useHotkey('Shift+ArrowRight', nextSentence)
+  useHotkey('ArrowLeft', previousSentence)
+  useHotkey('ArrowRight', nextSentence)
 
   function getPlayTitle() {
     if (!isSupported) {
@@ -55,20 +44,10 @@ export function PlayerPanel() {
           disabled={!hasText}
           onClick={previousSentence}
           size="icon"
-          title="Previous sentence (Shift + ←)"
+          title="Previous sentence (←)"
           variant="ghost"
         >
           <SkipBackIcon />
-        </Button>
-        <Button
-          aria-label="Previous word"
-          disabled={!hasText}
-          onClick={previousWord}
-          size="icon"
-          title="Previous word (←)"
-          variant="ghost"
-        >
-          <StepBackIcon />
         </Button>
         <Button
           aria-label={isPlaying ? 'Pause' : 'Play'}
@@ -81,33 +60,14 @@ export function PlayerPanel() {
           {isPlaying ? <PauseIcon /> : <PlayIcon className="play-icon" />}
         </Button>
         <Button
-          aria-label="Next word"
-          disabled={!hasText}
-          onClick={nextWord}
-          size="icon"
-          title="Next word (→)"
-          variant="ghost"
-        >
-          <StepForwardIcon />
-        </Button>
-        <Button
           aria-label="Next sentence"
           disabled={!hasText}
           onClick={nextSentence}
           size="icon"
-          title="Next sentence (Shift + →)"
+          title="Next sentence (→)"
           variant="ghost"
         >
           <SkipForwardIcon />
-        </Button>
-        <Button
-          aria-label="Stop and return to the beginning"
-          onClick={stop}
-          size="icon"
-          title="Stop (Esc)"
-          variant="ghost"
-        >
-          <SquareIcon />
         </Button>
       </div>
       <span className="player-divider" aria-hidden="true" />
@@ -120,15 +80,6 @@ export function PlayerPanel() {
         <GaugeIcon />
         {speed}×
       </button>
-      <span className="player-divider" aria-hidden="true" />
-      {model !== null && !hasText ? (
-        <span className="sentence-progress">No text to read on this page</span>
-      ) : (
-        <span className="sentence-progress">
-          Sentence <strong>{sentenceIndex === null ? '—' : sentenceIndex + 1}</strong> of{' '}
-          <strong>{sentenceCount || '—'}</strong>
-        </span>
-      )}
       {isTimerSync && (
         <span
           className="timer-sync"

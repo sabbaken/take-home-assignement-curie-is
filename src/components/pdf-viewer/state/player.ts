@@ -104,7 +104,6 @@ export function usePlayerState({ pdf, pageNumber, pageCount, goToPage, model }: 
       speed,
       wordIndex,
       sentenceIndex,
-      sentenceCount: model?.sentences.length ?? 0,
       hasText: wordCount > 0,
       seek,
       togglePlayback() {
@@ -117,12 +116,6 @@ export function usePlayerState({ pdf, pageNumber, pageCount, goToPage, model }: 
       stop() {
         setSession(null)
         setCursor(null)
-      },
-      previousWord() {
-        seek(wordIndex === null ? 0 : wordIndex - 1)
-      },
-      nextWord() {
-        seek(wordIndex === null ? 0 : wordIndex + 1)
       },
       previousSentence() {
         seekSentence(sentenceIndex === null ? 0 : sentenceIndex - 1)
