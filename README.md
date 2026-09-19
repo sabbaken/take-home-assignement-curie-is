@@ -43,6 +43,10 @@ relative base path, so the same build works for both project pages and a custom 
 
 ## PDF.js integration
 
-`src/components/pdf-viewer.tsx` configures the PDF.js worker, loads `public/sample.pdf`, and renders
-the selected page to a high-DPI canvas. Local PDF files can also be opened from the toolbar without
-uploading them to a server.
+`src/components/pdf-viewer/state/document.ts` configures the PDF.js worker and loads
+`public/sample.pdf`, and `pdf-page.tsx` renders the selected page to a high-DPI canvas. Local PDF
+files can also be opened from the toolbar without uploading them to a server.
+
+Viewer state is split into four contexts under `src/components/pdf-viewer/state/` (document,
+viewport, modes, player), composed by `PdfViewerProvider`. Each panel reads only the domain it
+needs and registers its own keyboard shortcuts with TanStack Hotkeys.
