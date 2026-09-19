@@ -61,7 +61,7 @@ export function HighlightOverlay({ layouts }: { layouts: Record<RectMode, PageLa
   }
 
   return (
-    <svg className="highlight-layer" aria-hidden="true">
+    <svg className={`highlight-layer ${rectMode}`} aria-hidden="true">
       {sentencePath !== '' && <path className="sentence-highlight" d={sentencePath} />}
       {wordPath !== '' && <path className="word-highlight" d={wordPath} />}
       {wordAnchor !== undefined && (

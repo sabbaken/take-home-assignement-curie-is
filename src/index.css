@@ -215,6 +215,14 @@
   transition: d 80ms ease-out;
 }
 
+.highlight-layer.naive .sentence-highlight {
+  fill: rgb(255 220 228);
+}
+
+.highlight-layer.naive .word-highlight {
+  fill: rgb(247 157 178);
+}
+
 .word-anchor {
   fill: none;
   scroll-margin: 6rem 3rem 8.5rem;
