@@ -91,14 +91,19 @@
   isolation: isolate;
   flex: none;
   width: max-content;
-  min-width: 24rem;
-  min-height: 34rem;
   margin-inline: auto;
   overflow: clip;
   background: white;
   box-shadow:
     0 2px 4px rgb(20 24 33 / 10%),
     0 18px 48px rgb(20 24 33 / 15%);
+}
+
+/* Holds the place of a page whose size is not known until its first render. A rendered page takes
+   its own size, which at small scales is below this. */
+.canvas-wrap.is-placeholder {
+  min-width: 24rem;
+  min-height: 34rem;
 }
 
 .pdf-canvas {

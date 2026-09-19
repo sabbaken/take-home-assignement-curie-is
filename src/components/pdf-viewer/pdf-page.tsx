@@ -2,6 +2,7 @@ import { LoaderCircleIcon } from 'lucide-react'
 import type { PDFDocumentProxy, RenderTask } from 'pdfjs-dist'
 import { useEffect, useEffectEvent, useRef, useState } from 'react'
 import { flushSync } from 'react-dom'
+import { cn } from '@/lib/utils'
 import { ErrorState } from './error-state'
 import { PageTextLayer } from './page-text-layer'
 import { useDocument } from './state/document'
@@ -144,7 +145,11 @@ export function PdfPage() {
   const pageSize = result?.pageSize ?? null
 
   return (
-    <div ref={pageRef} className="canvas-wrap" aria-busy={!isCurrent}>
+    <div
+      ref={pageRef}
+      className={cn('canvas-wrap', pageSize === null && 'is-placeholder')}
+      aria-busy={!isCurrent}
+    >
       <canvas
         ref={canvasRef}
         className="pdf-canvas"
