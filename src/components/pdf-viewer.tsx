@@ -13,7 +13,6 @@ import {
   PlayIcon,
   PlusIcon,
   RotateCcwIcon,
-  Settings2Icon,
   SkipBackIcon,
   SkipForwardIcon,
   SquareIcon,
@@ -77,7 +76,6 @@ export function PdfViewer() {
   const [isDebug, setIsDebug] = useState(false)
   const [isPlaying, setIsPlaying] = useState(false)
   const [speed, setSpeed] = useState<(typeof SPEEDS)[number]>(1)
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false)
   const [isDragging, setIsDragging] = useState(false)
   const [isLoadingDocument, setIsLoadingDocument] = useState(true)
@@ -207,7 +205,6 @@ export function PdfViewer() {
         setIsShortcutsOpen(current => !current)
       } else if (event.key === 'Escape') {
         setIsPlaying(false)
-        setIsSettingsOpen(false)
         setIsShortcutsOpen(false)
       }
     }
@@ -367,72 +364,7 @@ export function PdfViewer() {
           <BugIcon />
           Debug
         </Button>
-        <Popover
-          onOpenChange={open => {
-            setIsSettingsOpen(open)
-            if (open) {
-              setIsShortcutsOpen(false)
-            }
-          }}
-          open={isSettingsOpen}
-        >
-          <PopoverTrigger asChild>
-            <Button
-              aria-label="Reader settings"
-              size="icon"
-              title="Reader settings"
-              variant="ghost"
-            >
-              <Settings2Icon />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent align="end" className="popover-panel" sideOffset={10}>
-            <div className="popover-heading">
-              <div>
-                <p>Speech settings</p>
-                <span>Used while reading the document</span>
-              </div>
-              <Button
-                aria-label="Close settings"
-                onClick={() => setIsSettingsOpen(false)}
-                size="icon-sm"
-                variant="ghost"
-              >
-                <XIcon />
-              </Button>
-            </div>
-            <label className="field-label" htmlFor="voice-select">
-              Voice
-            </label>
-            <select className="select-control" defaultValue="default" id="voice-select">
-              <option value="default">System default</option>
-            </select>
-            <span className="field-label">Speed</span>
-            <div className="speed-options">
-              {SPEEDS.map(value => (
-                <Button
-                  aria-pressed={speed === value}
-                  className={cn(speed === value && 'is-active')}
-                  key={value}
-                  onClick={() => setSpeed(value)}
-                  size="sm"
-                  variant="ghost"
-                >
-                  {value}×
-                </Button>
-              ))}
-            </div>
-          </PopoverContent>
-        </Popover>
-        <Popover
-          onOpenChange={open => {
-            setIsShortcutsOpen(open)
-            if (open) {
-              setIsSettingsOpen(false)
-            }
-          }}
-          open={isShortcutsOpen}
-        >
+        <Popover onOpenChange={setIsShortcutsOpen} open={isShortcutsOpen}>
           <PopoverTrigger asChild>
             <Button
               aria-label="Keyboard shortcuts"
