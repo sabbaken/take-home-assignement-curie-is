@@ -204,13 +204,13 @@
   padding: 0.15rem;
 }
 
-.segmented-control [data-slot="button"],
+.segmented-control [data-slot="tabs-trigger"],
 .speed-options [data-slot="button"] {
   color: var(--muted-foreground);
   font-weight: 600;
 }
 
-.segmented-control [data-slot="button"].is-active,
+.segmented-control [data-slot="tabs-trigger"][data-state="active"],
 .speed-options [data-slot="button"].is-active {
   background: white;
   color: var(--foreground);
@@ -413,13 +413,12 @@
   z-index: 20;
   display: block;
   width: 18rem;
+  border: 1px solid rgb(216 219 224 / 90%);
+  border-radius: 0.75rem;
+  background: rgb(255 255 255 / 96%);
   padding: 0.9rem;
-}
-
-.settings-popover,
-.shortcuts-popover {
-  top: 4.85rem;
-  right: 1rem;
+  box-shadow: var(--panel-shadow);
+  backdrop-filter: blur(12px);
 }
 
 .popover-heading {
@@ -629,13 +628,6 @@ kbd {
 
   .modes-panel {
     top: 5rem;
-    right: auto;
-    left: 1rem;
-  }
-
-  .settings-popover,
-  .shortcuts-popover {
-    top: 8.85rem;
     right: auto;
     left: 1rem;
   }

@@ -1,27 +1,27 @@
 import {
-  Bug,
-  ChevronLeft,
-  ChevronRight,
-  FileText,
-  FileUp,
-  Gauge,
-  HelpCircle,
-  LoaderCircle,
-  Maximize2,
-  Minus,
-  Pause,
-  Play,
-  Plus,
-  RotateCcw,
-  Settings2,
-  SkipBack,
-  SkipForward,
-  Square,
-  StepBack,
-  StepForward,
-  Timer,
-  UploadCloud,
-  X,
+  BugIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  FileTextIcon,
+  FileUpIcon,
+  GaugeIcon,
+  HelpCircleIcon,
+  LoaderCircleIcon,
+  Maximize2Icon,
+  MinusIcon,
+  PauseIcon,
+  PlayIcon,
+  PlusIcon,
+  RotateCcwIcon,
+  Settings2Icon,
+  SkipBackIcon,
+  SkipForwardIcon,
+  SquareIcon,
+  StepBackIcon,
+  StepForwardIcon,
+  TimerIcon,
+  UploadCloudIcon,
+  XIcon,
 } from 'lucide-react'
 import {
   GlobalWorkerOptions,
@@ -38,6 +38,8 @@ import {
   useState,
 } from 'react'
 import { Button } from '@/components/ui/button'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { cn } from '@/lib/utils'
 
 GlobalWorkerOptions.workerSrc = new URL(
@@ -328,7 +330,7 @@ export function PdfViewer() {
 
       <div className="floating-panel document-panel">
         <span className="document-icon" aria-hidden="true">
-          <FileText />
+          <FileTextIcon />
         </span>
         <div className="file-meta">
           <p title={fileName}>{fileName}</p>
@@ -339,34 +341,19 @@ export function PdfViewer() {
         <span className="panel-divider" aria-hidden="true" />
         <Button asChild size="sm" variant="ghost">
           <label htmlFor="pdf-upload">
-            <FileUp />
+            <FileUpIcon />
             Open PDF
           </label>
         </Button>
       </div>
 
       <div className="floating-panel modes-panel">
-        <fieldset className="segmented-control">
-          <legend className="sr-only">Rectangle strategy</legend>
-          <Button
-            aria-pressed={mode === 'naive'}
-            className={cn(mode === 'naive' && 'is-active')}
-            onClick={() => setMode('naive')}
-            size="sm"
-            variant="ghost"
-          >
-            Naive
-          </Button>
-          <Button
-            aria-pressed={mode === 'precise'}
-            className={cn(mode === 'precise' && 'is-active')}
-            onClick={() => setMode('precise')}
-            size="sm"
-            variant="ghost"
-          >
-            Precise
-          </Button>
-        </fieldset>
+        <Tabs onValueChange={value => setMode(value as RectMode)} value={mode}>
+          <TabsList aria-label="Rectangle strategy" className="segmented-control">
+            <TabsTrigger value="naive">Naive</TabsTrigger>
+            <TabsTrigger value="precise">Precise</TabsTrigger>
+          </TabsList>
+        </Tabs>
         <span className="panel-divider" aria-hidden="true" />
         <Button
           aria-label="Toggle debug outlines"
@@ -377,151 +364,159 @@ export function PdfViewer() {
           title="Debug outlines (D)"
           variant="ghost"
         >
-          <Bug />
+          <BugIcon />
           Debug
         </Button>
-        <Button
-          aria-label="Reader settings"
-          aria-expanded={isSettingsOpen}
-          onClick={() => {
-            setIsSettingsOpen(current => !current)
-            setIsShortcutsOpen(false)
+        <Popover
+          onOpenChange={open => {
+            setIsSettingsOpen(open)
+            if (open) {
+              setIsShortcutsOpen(false)
+            }
           }}
-          size="icon"
-          title="Reader settings"
-          variant="ghost"
+          open={isSettingsOpen}
         >
-          <Settings2 />
-        </Button>
-        <Button
-          aria-label="Keyboard shortcuts"
-          aria-expanded={isShortcutsOpen}
-          onClick={() => {
-            setIsShortcutsOpen(current => !current)
-            setIsSettingsOpen(false)
-          }}
-          size="icon"
-          title="Keyboard shortcuts (?)"
-          variant="ghost"
-        >
-          <HelpCircle />
-        </Button>
-      </div>
-
-      {isSettingsOpen && (
-        <div className="floating-panel popover-panel settings-popover" role="dialog">
-          <div className="popover-heading">
-            <div>
-              <p>Speech settings</p>
-              <span>Used while reading the document</span>
-            </div>
+          <PopoverTrigger asChild>
             <Button
-              aria-label="Close settings"
-              onClick={() => setIsSettingsOpen(false)}
-              size="icon-sm"
+              aria-label="Reader settings"
+              size="icon"
+              title="Reader settings"
               variant="ghost"
             >
-              <X />
+              <Settings2Icon />
             </Button>
-          </div>
-          <label className="field-label" htmlFor="voice-select">
-            Voice
-          </label>
-          <select className="select-control" defaultValue="default" id="voice-select">
-            <option value="default">System default</option>
-          </select>
-          <span className="field-label">Speed</span>
-          <div className="speed-options">
-            {SPEEDS.map(value => (
+          </PopoverTrigger>
+          <PopoverContent align="end" className="popover-panel" sideOffset={10}>
+            <div className="popover-heading">
+              <div>
+                <p>Speech settings</p>
+                <span>Used while reading the document</span>
+              </div>
               <Button
-                aria-pressed={speed === value}
-                className={cn(speed === value && 'is-active')}
-                key={value}
-                onClick={() => setSpeed(value)}
-                size="sm"
+                aria-label="Close settings"
+                onClick={() => setIsSettingsOpen(false)}
+                size="icon-sm"
                 variant="ghost"
               >
-                {value}×
+                <XIcon />
               </Button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {isShortcutsOpen && (
-        <div className="floating-panel popover-panel shortcuts-popover" role="dialog">
-          <div className="popover-heading">
-            <div>
-              <p>Keyboard shortcuts</p>
-              <span>Keep your hands on the keyboard</span>
             </div>
+            <label className="field-label" htmlFor="voice-select">
+              Voice
+            </label>
+            <select className="select-control" defaultValue="default" id="voice-select">
+              <option value="default">System default</option>
+            </select>
+            <span className="field-label">Speed</span>
+            <div className="speed-options">
+              {SPEEDS.map(value => (
+                <Button
+                  aria-pressed={speed === value}
+                  className={cn(speed === value && 'is-active')}
+                  key={value}
+                  onClick={() => setSpeed(value)}
+                  size="sm"
+                  variant="ghost"
+                >
+                  {value}×
+                </Button>
+              ))}
+            </div>
+          </PopoverContent>
+        </Popover>
+        <Popover
+          onOpenChange={open => {
+            setIsShortcutsOpen(open)
+            if (open) {
+              setIsSettingsOpen(false)
+            }
+          }}
+          open={isShortcutsOpen}
+        >
+          <PopoverTrigger asChild>
             <Button
-              aria-label="Close shortcuts"
-              onClick={() => setIsShortcutsOpen(false)}
-              size="icon-sm"
+              aria-label="Keyboard shortcuts"
+              size="icon"
+              title="Keyboard shortcuts (?)"
               variant="ghost"
             >
-              <X />
+              <HelpCircleIcon />
             </Button>
-          </div>
-          <dl className="shortcuts-list">
-            <div>
-              <dt>Play or pause</dt>
-              <dd>
-                <kbd>Space</kbd>
-              </dd>
+          </PopoverTrigger>
+          <PopoverContent align="end" className="popover-panel" sideOffset={10}>
+            <div className="popover-heading">
+              <div>
+                <p>Keyboard shortcuts</p>
+                <span>Keep your hands on the keyboard</span>
+              </div>
+              <Button
+                aria-label="Close shortcuts"
+                onClick={() => setIsShortcutsOpen(false)}
+                size="icon-sm"
+                variant="ghost"
+              >
+                <XIcon />
+              </Button>
             </div>
-            <div>
-              <dt>Previous / next word</dt>
-              <dd>
-                <kbd>←</kbd>
-                <kbd>→</kbd>
-              </dd>
-            </div>
-            <div>
-              <dt>Previous / next sentence</dt>
-              <dd>
-                <kbd>⇧</kbd>
-                <kbd>←</kbd>
-                <kbd>→</kbd>
-              </dd>
-            </div>
-            <div>
-              <dt>Stop</dt>
-              <dd>
-                <kbd>Esc</kbd>
-              </dd>
-            </div>
-            <div>
-              <dt>Zoom</dt>
-              <dd>
-                <kbd>−</kbd>
-                <kbd>+</kbd>
-              </dd>
-            </div>
-            <div>
-              <dt>Debug / strategy</dt>
-              <dd>
-                <kbd>D</kbd>
-                <kbd>N</kbd>
-              </dd>
-            </div>
-          </dl>
-        </div>
-      )}
+            <dl className="shortcuts-list">
+              <div>
+                <dt>Play or pause</dt>
+                <dd>
+                  <kbd>Space</kbd>
+                </dd>
+              </div>
+              <div>
+                <dt>Previous / next word</dt>
+                <dd>
+                  <kbd>←</kbd>
+                  <kbd>→</kbd>
+                </dd>
+              </div>
+              <div>
+                <dt>Previous / next sentence</dt>
+                <dd>
+                  <kbd>⇧</kbd>
+                  <kbd>←</kbd>
+                  <kbd>→</kbd>
+                </dd>
+              </div>
+              <div>
+                <dt>Stop</dt>
+                <dd>
+                  <kbd>Esc</kbd>
+                </dd>
+              </div>
+              <div>
+                <dt>Zoom</dt>
+                <dd>
+                  <kbd>−</kbd>
+                  <kbd>+</kbd>
+                </dd>
+              </div>
+              <div>
+                <dt>Debug / strategy</dt>
+                <dd>
+                  <kbd>D</kbd>
+                  <kbd>N</kbd>
+                </dd>
+              </div>
+            </dl>
+          </PopoverContent>
+        </Popover>
+      </div>
 
       <div ref={stageRef} className="document-stage">
         {error !== null ? (
           <div className="empty-state" role="alert">
             <span className="empty-state-icon">
-              <FileText />
+              <FileTextIcon />
             </span>
             <p>Couldn’t open this PDF</p>
             <span>{error}</span>
             <div className="empty-state-actions">
               <Button asChild size="sm">
                 <label htmlFor="pdf-upload">
-                  <FileUp />
+                  <FileUpIcon />
                   Choose another
                 </label>
               </Button>
@@ -535,7 +530,7 @@ export function PdfViewer() {
             <canvas ref={canvasRef} className="pdf-canvas" aria-label={`Page ${pageNumber}`} />
             {(isLoadingDocument || isRendering) && (
               <div className="page-loading" role="status">
-                <LoaderCircle />
+                <LoaderCircleIcon />
                 <span>{isLoadingDocument ? 'Opening document' : 'Rendering page'}</span>
               </div>
             )}
@@ -565,10 +560,10 @@ export function PdfViewer() {
             title="Previous sentence (Shift + ←)"
             variant="ghost"
           >
-            <SkipBack />
+            <SkipBackIcon />
           </Button>
           <Button aria-label="Previous word" size="icon" title="Previous word (←)" variant="ghost">
-            <StepBack />
+            <StepBackIcon />
           </Button>
           <Button
             aria-label={isPlaying ? 'Pause' : 'Play'}
@@ -577,10 +572,10 @@ export function PdfViewer() {
             size="icon-lg"
             title="Play or pause (Space)"
           >
-            {isPlaying ? <Pause /> : <Play className="play-icon" />}
+            {isPlaying ? <PauseIcon /> : <PlayIcon className="play-icon" />}
           </Button>
           <Button aria-label="Next word" size="icon" title="Next word (→)" variant="ghost">
-            <StepForward />
+            <StepForwardIcon />
           </Button>
           <Button
             aria-label="Next sentence"
@@ -588,7 +583,7 @@ export function PdfViewer() {
             title="Next sentence (Shift + →)"
             variant="ghost"
           >
-            <SkipForward />
+            <SkipForwardIcon />
           </Button>
           <Button
             aria-label="Stop and return to the beginning"
@@ -597,7 +592,7 @@ export function PdfViewer() {
             title="Stop (Esc)"
             variant="ghost"
           >
-            <Square />
+            <SquareIcon />
           </Button>
         </div>
         <span className="player-divider" aria-hidden="true" />
@@ -610,7 +605,7 @@ export function PdfViewer() {
           type="button"
           title="Change reading speed"
         >
-          <Gauge />
+          <GaugeIcon />
           {speed}×
         </button>
         <span className="player-divider" aria-hidden="true" />
@@ -621,7 +616,7 @@ export function PdfViewer() {
           className="timer-sync"
           title="Word timing is estimated when the voice provides no boundary events"
         >
-          <Timer />
+          <TimerIcon />
           <span className="sr-only">Timer-based synchronization fallback</span>
         </span>
       </div>
@@ -636,7 +631,7 @@ export function PdfViewer() {
             size="icon-sm"
             variant="ghost"
           >
-            <ChevronLeft />
+            <ChevronLeftIcon />
           </Button>
           <input
             aria-label="Page number"
@@ -660,7 +655,7 @@ export function PdfViewer() {
             size="icon-sm"
             variant="ghost"
           >
-            <ChevronRight />
+            <ChevronRightIcon />
           </Button>
         </fieldset>
         <span className="panel-divider" aria-hidden="true" />
@@ -676,7 +671,7 @@ export function PdfViewer() {
             size="icon-sm"
             variant="ghost"
           >
-            <Minus />
+            <MinusIcon />
           </Button>
           <span className="zoom-value">{toPercent(scale)}</span>
           <Button
@@ -689,7 +684,7 @@ export function PdfViewer() {
             size="icon-sm"
             variant="ghost"
           >
-            <Plus />
+            <PlusIcon />
           </Button>
           <Button
             aria-label="Fit page to width"
@@ -698,7 +693,7 @@ export function PdfViewer() {
             title="Fit to width"
             variant="ghost"
           >
-            <Maximize2 />
+            <Maximize2Icon />
           </Button>
         </fieldset>
         {fileName !== 'sample.pdf' && (
@@ -709,7 +704,7 @@ export function PdfViewer() {
             title="Restore sample PDF"
             variant="ghost"
           >
-            <RotateCcw />
+            <RotateCcwIcon />
           </Button>
         )}
       </div>
@@ -717,7 +712,7 @@ export function PdfViewer() {
       {isDragging && (
         <div className="drop-overlay" aria-hidden="true">
           <div>
-            <UploadCloud />
+            <UploadCloudIcon />
             <p>Drop PDF to open</p>
             <span>The current document will be replaced</span>
           </div>
