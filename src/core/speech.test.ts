@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { readAloud } from '@/core/speech'
+import { readAloud, unlockSpeech } from '@/core/speech'
 import { buildPageTextModel } from '@/core/text-model'
 
 // jsdom has no speech synthesis, so the test drives the utterance events by hand.
@@ -110,5 +110,23 @@ describe('readAloud', () => {
     expect(spoken).toHaveLength(1)
     expect(callbacks.onEnd).not.toHaveBeenCalled()
     expect(callbacks.onError).not.toHaveBeenCalled()
+  })
+})
+
+describe('unlockSpeech', () => {
+  beforeEach(() => {
+    vi.stubGlobal('SpeechSynthesisUtterance', FakeUtterance)
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('speaks an empty utterance without cancelling it', () => {
+    const { spoken, synthesis } = createSynthesis()
+    unlockSpeech(synthesis)
+
+    expect(spoken.map(utterance => utterance.text)).toEqual([''])
+    expect(synthesis.cancel).not.toHaveBeenCalled()
   })
 })

@@ -21,6 +21,14 @@ export function estimateSpeechSeconds(text: string, rate: number) {
   return (text.length / CHARACTERS_PER_SECOND + pauses * CLAUSE_PAUSE_SECONDS) / rate
 }
 
+// Safari on iOS ignores `speak()` until one call happens inside a user gesture, and `readAloud`
+// runs later, from an effect. Call this from the click or key handler that starts reading. The
+// empty utterance is silent and ends at once, and the first sentence queues behind it. It is not
+// cancelled, because Chrome can drop an utterance spoken shortly after `cancel()`.
+export function unlockSpeech(synthesis: SpeechSynthesis) {
+  synthesis.speak(new SpeechSynthesisUtterance(''))
+}
+
 // Reads the page one sentence per utterance, starting at `fromWord`, and reports the active word
 // from `boundary` events. Returns a function that stops reading.
 export function readAloud(synthesis: SpeechSynthesis, options: ReadAloudOptions) {

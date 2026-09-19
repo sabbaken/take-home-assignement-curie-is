@@ -1,6 +1,6 @@
 import type { PDFDocumentProxy } from 'pdfjs-dist'
 import { useEffect, useEffectEvent, useMemo, useState } from 'react'
-import { readAloud } from '@/core/speech'
+import { readAloud, unlockSpeech } from '@/core/speech'
 import {
   findFirstWordOfSentence,
   findSentenceIndexOfWord,
@@ -71,7 +71,11 @@ export function usePlayerState({ pdf, pageNumber, pageCount, goToPage, model }: 
       onWord: index => setCursor({ pdf: sessionPdf, pageNumber, wordIndex: index }),
       onTimerSync: () => setIsTimerSync(true),
       onEnd: () => handlePageEnd(),
-      onError: () => setSession(null),
+      onError: error => {
+        // The player only shows that reading stopped, so the reason goes to the console.
+        console.warn(`Speech synthesis failed: ${error}`)
+        setSession(null)
+      },
     })
   }, [readingSession, pageNumber, model, speed])
 
@@ -86,7 +90,11 @@ export function usePlayerState({ pdf, pageNumber, pageCount, goToPage, model }: 
 
       const next = { pdf, pageNumber, wordIndex: Math.min(Math.max(nextWord, 0), wordCount - 1) }
       setCursor(next)
-      if (isPlaying || (options.play === true && synthesis !== null)) {
+      if (isPlaying) {
+        setSession(next)
+      } else if (options.play === true && synthesis !== null) {
+        // `seek` runs inside the click or key handler, and speech starts later, from an effect.
+        unlockSpeech(synthesis)
         setSession(next)
       }
     }
