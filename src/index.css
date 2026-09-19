@@ -70,22 +70,31 @@
   background: var(--background);
 }
 
+/* A column flex container, so the page is centred by its auto margins while it fits and starts at
+   the left edge, with the whole page reachable by scrolling, once it is wider than the stage. */
 .document-stage {
   position: absolute;
   inset: 0;
+  display: flex;
+  flex-direction: column;
   overflow: auto;
-  padding: 6rem max(3rem, calc((100vw - 595px) / 2)) 8.5rem;
+  padding: 6rem 3rem 8.5rem;
   scrollbar-color: #babec4 transparent;
+  scrollbar-gutter: stable both-edges;
   scrollbar-width: thin;
 }
 
+/* Clipped, because PDF.js gives the TextLayer an explicit size, which stays at the previous scale
+   until the layer is rebuilt and would otherwise stretch the scroll area during a zoom. */
 .canvas-wrap {
   position: relative;
   isolation: isolate;
+  flex: none;
   width: max-content;
   min-width: 24rem;
   min-height: 34rem;
   margin-inline: auto;
+  overflow: clip;
   background: white;
   box-shadow:
     0 2px 4px rgb(20 24 33 / 10%),

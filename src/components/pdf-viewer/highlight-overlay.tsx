@@ -20,8 +20,9 @@ function getDebugPath(layout: PageLayout) {
 // Highlights with the selected strategy. Debug mode outlines every word with both strategies.
 export function HighlightOverlay({ layouts }: { layouts: Record<RectMode, PageLayout> | null }) {
   const wordAnchorRef = useRef<SVGRectElement>(null)
+  const followedWordRef = useRef<number | null>(null)
   const { rectMode, isDebug } = useModes()
-  const { wordIndex, sentenceIndex } = usePlayer()
+  const { wordIndex, sentenceIndex, isPlaying } = usePlayer()
   const layout = layouts?.[rectMode] ?? null
 
   const sentencePath = roundedRectsPath(
@@ -41,14 +42,19 @@ export function HighlightOverlay({ layouts }: { layouts: Record<RectMode, PageLa
     [isDebug, layouts],
   )
 
-  // Keeps the active word in view, also after a zoom moves it. It scrolls to an unanimated anchor,
-  // because the highlight itself is still at its old position while its transition runs.
-  // `scroll-margin` on the anchor keeps the word clear of the floating panels.
+  // Keeps the active word in view. While reading, it also follows the word after a zoom moves it.
+  // While paused, it scrolls only to a word the cursor moved to, so zooming into another part of
+  // the page stays there. The cursor is cleared on every page change, which resets the tracking.
+  // It scrolls to an unanimated anchor, because the highlight itself is still at its old position
+  // while its transition runs. `scroll-margin` on the anchor keeps the word clear of the panels.
   useEffect(() => {
-    if (wordPath !== '') {
+    if (wordIndex === null) {
+      followedWordRef.current = null
+    } else if (wordPath !== '' && (isPlaying || wordIndex !== followedWordRef.current)) {
       wordAnchorRef.current?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+      followedWordRef.current = wordIndex
     }
-  }, [wordPath])
+  }, [wordPath, wordIndex, isPlaying])
 
   if (layout === null) {
     return null

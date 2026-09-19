@@ -109,6 +109,14 @@ the page number to the `pdf` instance, so a new document starts on page 1 withou
 - Zoom must re-render the page at the new scale. Never use a CSS transform, because the canvas
   text blurs and the rects drift. The text model does not depend on scale, so it is built once per
   page, but the TextLayer and the measured rects are rebuilt at every scale.
+- The canvas CSS size follows `scale` in the same commit, and the last bitmap is stretched to it.
+  `PdfPage` re-renders off screen once the scale has held for `RESCALE_DELAY`, so a pinch
+  (`use-pinch-zoom.ts`: Ctrl + wheel, or Safari's `gesture*` events) does not start a render per
+  event. The highlights are hidden until the new TextLayer is measured. Every zoom goes through
+  `zoom()` in `state/viewport.ts`, which records the point under the pointer, or the middle of the
+  stage, and a layout effect scrolls it back into place before paint.
+- The stage centres the page with auto margins in a column flex container, not with padding
+  computed from the page width, so a page wider than the stage scrolls from its left edge.
 - The page container stacks three layers: canvas, then TextLayer (`page-text-layer.tsx`), then the
   `<svg>` overlay (`highlight-overlay.tsx`). Clicking a word seeks there and starts reading.
 - `PageTextLayer` measures both layouts on every render, so debug mode can outline words with
