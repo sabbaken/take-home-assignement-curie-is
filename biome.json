@@ -14,7 +14,8 @@
       "!**/coverage",
       "!**/.idea",
       "!pnpm-lock.yaml",
-      "!public/sample.pdf"
+      "!public/sample.pdf",
+      "!public/Kiryl-Viarenich-Frontend.pdf"
     ]
   },
   "formatter": {

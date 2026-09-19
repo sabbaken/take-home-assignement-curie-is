@@ -8,7 +8,7 @@ GlobalWorkerOptions.workerSrc = new URL(
 ).toString()
 
 export type DocumentSource =
-  | { kind: 'sample'; name: string; url: string }
+  | { kind: 'default'; name: string; url: string }
   | { kind: 'file'; name: string; file: File }
 
 type DocumentState =
@@ -21,9 +21,13 @@ type DocumentAction =
   | { type: 'loaded'; pdf: PDFDocumentProxy }
   | { type: 'failed'; error: string }
 
-// A fresh object on every call, so reopening the sample always triggers a reload.
-function createSampleSource(): DocumentSource {
-  return { kind: 'sample', name: 'sample.pdf', url: `${import.meta.env.BASE_URL}sample.pdf` }
+// A fresh object on every call, so reopening the default document always triggers a reload.
+function createDefaultSource(): DocumentSource {
+  return {
+    kind: 'default',
+    name: 'Kiryl-Viarenich-Frontend.pdf',
+    url: `${import.meta.env.BASE_URL}Kiryl-Viarenich-Frontend.pdf`,
+  }
 }
 
 function isPdf(file: File) {
@@ -46,7 +50,7 @@ function documentReducer(state: DocumentState, action: DocumentAction): Document
 export function useDocumentState() {
   const [state, dispatch] = useReducer(documentReducer, undefined, () => ({
     status: 'loading' as const,
-    source: createSampleSource(),
+    source: createDefaultSource(),
   }))
   const { source } = state
 
@@ -89,8 +93,8 @@ export function useDocumentState() {
           dispatch({ type: 'failed', error: 'Choose a PDF file to continue.' })
         }
       },
-      openSample() {
-        dispatch({ type: 'open', source: createSampleSource() })
+      openDefault() {
+        dispatch({ type: 'open', source: createDefaultSource() })
       },
     }),
     [state],

@@ -4,7 +4,7 @@ import { OpenFileButton } from './file-input'
 import { useDocument } from './state/document'
 
 export function ErrorState({ message }: { message: string }) {
-  const { openSample } = useDocument()
+  const { openDefault } = useDocument()
 
   return (
     <div className="empty-state" role="alert">
@@ -18,8 +18,8 @@ export function ErrorState({ message }: { message: string }) {
           <FileUpIcon />
           Choose another
         </OpenFileButton>
-        <Button onClick={openSample} size="sm" variant="outline">
-          Open sample
+        <Button onClick={openDefault} size="sm" variant="outline">
+          Open default
         </Button>
       </div>
     </div>

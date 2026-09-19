@@ -34,7 +34,7 @@ pnpm exec shadcn add <component>  # add a shadcn/ui primitive into src/component
 
 Every push to `main` runs `pnpm validate` and deploys `dist` to GitHub Pages
 (`.github/workflows/deploy.yml`). Vite uses `base: './'`, so reference files in `public/` through
-`import.meta.env.BASE_URL` (see `createSampleSource` in `state/document.ts`), not through absolute
+`import.meta.env.BASE_URL` (see `createDefaultSource` in `state/document.ts`), not through absolute
 paths.
 
 ## Architecture
@@ -92,7 +92,8 @@ paths.
   Pause cancels speech instead of calling `speechSynthesis.pause()`, which is unreliable in Chrome.
   At the end of a page, reading moves on to the next one.
 - `state/document.ts` configures the PDF.js worker (`new URL('pdfjs-dist/build/pdf.worker.min.mjs',
-  import.meta.url)`) and loads either the bundled `public/sample.pdf` or a local `File`.
+  import.meta.url)`) and loads either the bundled `public/Kiryl-Viarenich-Frontend.pdf` or a local
+  `File`.
 
 ### Async and effect conventions
 

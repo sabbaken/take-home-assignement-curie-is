@@ -29,7 +29,7 @@ src/core/                          Framework-free text model and rectangle strat
 src/components/pdf-viewer/         The single screen: page stage, floating panels, shortcuts
 src/components/pdf-viewer/state/   Five contexts (document, viewport, page text, modes, player)
 src/components/ui/                 shadcn/ui primitives
-public/sample.pdf                  Sample document opened on first load
+public/Kiryl-Viarenich-Frontend.pdf  CV opened on first load
 tmp/plan.md                        Implementation plan (in Russian)
 ```
 

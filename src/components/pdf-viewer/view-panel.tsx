@@ -5,19 +5,19 @@ import { useDocument } from './state/document'
 import { ZoomControls } from './zoom-controls'
 
 export function ViewPanel() {
-  const { source, openSample } = useDocument()
+  const { source, openDefault } = useDocument()
 
   return (
     <div className="floating-panel view-panel">
       <PageNavigation />
       <span className="panel-divider" aria-hidden="true" />
       <ZoomControls />
-      {source.kind !== 'sample' && (
+      {source.kind !== 'default' && (
         <Button
-          aria-label="Restore sample PDF"
-          onClick={openSample}
+          aria-label="Restore default PDF"
+          onClick={openDefault}
           size="icon-sm"
-          title="Restore sample PDF"
+          title="Restore default PDF"
           variant="ghost"
         >
           <RotateCcwIcon />
