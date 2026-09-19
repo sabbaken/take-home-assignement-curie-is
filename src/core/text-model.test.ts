@@ -61,6 +61,22 @@ describe('buildPageTextModel', () => {
     expect(model.words.map(word => word.text)).toEqual(['Jean‑Luc', 're‐enters', 'then', 'stops'])
   })
 
+  it('keeps full URLs in one highlight range without trailing punctuation', () => {
+    const model = buildPageTextModel([
+      {
+        str: 'Read https://example.com/docs/getting-started?tab=api#usage, or example.org/help/faq.',
+        hasEOL: false,
+      },
+    ])
+
+    expect(model.words.map(word => word.text)).toEqual([
+      'Read',
+      'https://example.com/docs/getting-started?tab=api#usage',
+      'or',
+      'example.org/help/faq',
+    ])
+  })
+
   it('wraps lines with a space so a sentence continues onto the next line', () => {
     const model = buildPageTextModel([
       { str: 'Dynamic languages are hard', hasEOL: true },

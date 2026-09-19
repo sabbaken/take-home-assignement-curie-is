@@ -33,9 +33,10 @@ function segmentWords(text: string, locale?: string) {
       text: segment.segment,
     }))
 
-  // `Intl.Segmenter` treats the pieces of hyphenated words and email addresses as separate words.
-  // Speech engines commonly report one boundary for the whole token, though, which would leave
-  // only its first piece highlighted. Keep those tokens in one range so speech and geometry agree.
+  // `Intl.Segmenter` treats the pieces of hyphenated words, email addresses and URLs as separate
+  // words. Speech engines commonly report one boundary for the whole token, though, which would
+  // leave only its first piece highlighted. Keep those tokens in one range so speech and geometry
+  // agree.
   const hyphenatedWords = words.reduce<TextRange[]>((merged, word) => {
     const previous = merged.at(-1)
     const connector = previous === undefined ? '' : text.slice(previous.end, word.start)
@@ -60,13 +61,29 @@ function segmentWords(text: string, locale?: string) {
       text: match[0],
     }),
   )
+  const urlRanges = Array.from(
+    text.matchAll(
+      /(?:https?:\/\/|www\.)[^\s<>{}[\]"']+|(?:[\p{L}\p{N}](?:[\p{L}\p{N}-]*[\p{L}\p{N}])?\.)+[\p{L}]{2,}(?:\/[^\s<>{}[\]"']*)?/giu,
+    ),
+    match => {
+      const url = match[0].replace(/[\]),.;:!?]+$/u, '')
+      return {
+        start: match.index,
+        end: match.index + url.length,
+        text: url,
+      }
+    },
+  )
+  const compoundRanges = [...emailRanges, ...urlRanges]
 
   return hyphenatedWords.reduce<TextRange[]>((merged, word) => {
-    const email = emailRanges.find(range => word.start >= range.start && word.end <= range.end)
-    if (email === undefined) {
+    const compound = compoundRanges.find(
+      range => word.start >= range.start && word.end <= range.end,
+    )
+    if (compound === undefined) {
       merged.push(word)
-    } else if (merged.at(-1)?.start !== email.start) {
-      merged.push(email)
+    } else if (merged.at(-1)?.start !== compound.start) {
+      merged.push(compound)
     }
     return merged
   }, [])
